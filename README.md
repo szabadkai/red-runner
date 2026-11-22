@@ -75,3 +75,7 @@ micropython tools/sim.py fair duel
 ```bash
 micropython tools/sim.py frames pinball out.bin 1200 2
 ```
+
+## Licence
+
+MIT, see [LICENSE](LICENSE).
