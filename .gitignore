@@ -1,0 +1,7 @@
+# the board's factory firmware dump and the MicroPython image: not ours to redistribute
+factory_backup.bin
+firmware/
+
+__pycache__/
+*.pyc
+.DS_Store
