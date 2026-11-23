@@ -24,6 +24,7 @@ GAMES = (
     ("wisp", "LOST WISP"),
     ("hunter", "HUNTSMAN"),
     ("pinball", "PINBALL"),
+    ("golf", "TINY GOLF"),
 )
 
 

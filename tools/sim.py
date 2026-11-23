@@ -4,8 +4,10 @@
   micropython tools/sim.py fair GAME [ticks] [seeds]                    a perfect bot must never be hit
   micropython tools/sim.py stats pinball [games] [delay] [jitter]       whole games; the bot sees the ball delay ticks
                                                                         late and flips up to jitter ticks later still
+  micropython tools/sim.py stats golf [jitter]                          a round by a bot that tries every shot first,
+                                                                        then misses its power by up to jitter
 
-GAME is runner, duel, wisp, hunter or pinball (not `fair`: no bot can keep a pinball from draining).
+GAME is runner, duel, wisp, hunter, pinball or golf (`fair` is for the first four: they have hearts to lose).
 In `frames` the bot plays badly now and then, so the dump also shows the stumble, bite and
 game-over screens.
 """
@@ -183,7 +185,61 @@ def pinball_bot(m, g, n, sloppy):
     return False
 
 
-BOTS = {"runner": runner_bot, "duel": duel_bot, "wisp": wisp_bot, "hunter": hunter_bot, "pinball": pinball_bot}
+_golf = {}
+
+
+def golf_try(m, g, sh, aim, power):
+    """Play one shot on a copy of the game; returns how bad the result is, -1 for holed."""
+    if sh.hole != g.hole:
+        sh._load(g.hole)
+    sh.strokes = 0
+    sh.x = g.x
+    sh.y = g.y
+    sh.lx = g.x
+    sh.ly = g.y
+    sh.dir = g.dir
+    sh.rough = g.rough
+    sh.t = 0
+    sh._launch(aim, power)
+    while sh.state == m.FLY:
+        sh.t += 1
+        sh._fly()
+    if sh.state == m.HOLED:
+        return -1
+    d = abs((sh.x >> 8) - g.cup)
+    return d + 100 if sh.state == m.SPLASH else d + 30 if sh.rough else d
+
+
+def golf_bot(m, g, n, sloppy):
+    """Tries every angle and every second power on a copy and plays the one that ends nearest."""
+    if g.state == m.TITLE or g.state == m.OVER:
+        return start(g, n)
+    if g.state == m.AIM:
+        key = (g.hole, g.strokes, g.x, g.y)
+        if _golf.get("key") != key:
+            _golf["key"] = key
+            if "sh" not in _golf:
+                _golf["sh"] = m.Game(g.fb, 0, 1)
+            best = None
+            for aim in range(16):
+                for power in range(2, m.POWER_MAX + 1, 2):
+                    r = golf_try(m, g, _golf["sh"], aim, power)
+                    if best is None or r < best[0]:
+                        best = (r, aim, power)
+            aim, power = best[1:]
+            if JITTER[0]:
+                # an unsteady hand: a step of aim and a few of power either way
+                _dice[0] = _dice[0] * 75 % 65537
+                aim = min(15, max(0, aim + _dice[0] % 3 - 1))
+                power = min(m.POWER_MAX, max(1, power + (_dice[0] >> 4) % (2 * JITTER[0] + 1) - JITTER[0]))
+            _golf["shot"] = (7, 30) if sloppy and g.strokes == 0 else (aim, power)
+        return g.aim == _golf["shot"][0]
+    if g.state == m.CHARGE:
+        return g.power < _golf["shot"][1]
+    return False
+
+
+BOTS = {"runner": runner_bot, "duel": duel_bot, "wisp": wisp_bot, "hunter": hunter_bot, "pinball": pinball_bot, "golf": golf_bot}
 
 
 def hurt(name, m, g, was):
@@ -255,8 +311,23 @@ def stats(name, games, delay, jitter):
     print("mean score", total // games)
 
 
+def round_of_golf(jitter):
+    JITTER[0] = jitter
+    m, g, buf = make("golf", 3)
+    n = 0
+    while g.state != m.OVER and n < 200000:
+        was = g.state
+        g.tick(golf_bot(m, g, n, False))
+        n += 1
+        if g.state == m.HOLED and was != m.HOLED:
+            print("hole", g.hole + 1, "par", g.par, "strokes", g.strokes)
+    print("round", g.score, "par", sum(h[0] for h in m.HOLES))
+
+
 a = sys.argv
-if a[1] == "stats":
+if a[1] == "stats" and a[2] == "golf":
+    round_of_golf(int(a[3]) if len(a) > 3 else 0)
+elif a[1] == "stats":
     stats(a[2], int(a[3]) if len(a) > 3 else 10, int(a[4]) if len(a) > 4 else 0, int(a[5]) if len(a) > 5 else 0)
 elif a[1] == "frames":
     frames(a[2], a[3], int(a[4]) if len(a) > 4 else 600, int(a[5]) if len(a) > 5 else 1, int(a[6]) if len(a) > 6 else 3)

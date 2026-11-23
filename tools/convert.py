@@ -99,6 +99,16 @@ GAMES = {
         "red_hit": (RED, [(4, 1), (4, 2)], {}),
         "red_death": (RED, row(5, 4), {}),
     },
+    "golf": {
+        "red_idle": (RED, row(0, 4), {}),
+        "red_swing": (RED, row(2, 6), {}),
+        "red_idle_l": (RED, row(0, 4), {"flip": True}),
+        "red_swing_l": (RED, row(2, 6), {"flip": True}),
+        "mushroom": (MUSHROOM, row(0, 4) + [(1, 1)], {}),  # frames 0-3 idle, 4 puffed up
+        "brambles": (BRAMBLES, [(0, 0)], {}),
+        "wolf_idle": (WOLF, row(0, 4), {"flip": True}),
+        "wolf_hit": (WOLF, [(4, 1), (4, 2)], {"flip": True}),
+    },
 }
 
 

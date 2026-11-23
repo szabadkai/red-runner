@@ -1,13 +1,13 @@
 # RED runner
 
-Five one-button games for the tiny ESP32-C3 board with a 0.42" 72x40 OLED, written in
+Six one-button games for the tiny ESP32-C3 board with a 0.42" 72x40 OLED, written in
 MicroPython. The only control is the board's BOOT button; nothing else is wired up.
 
 | | |
 |---|---|
 | ![RED RUN](art/red_run.gif) | ![WOLF DUEL](art/wolf_duel.gif) |
 | ![LOST WISP](art/lost_wisp.gif) | ![HUNTSMAN](art/huntsman.gif) |
-| ![PINBALL](art/pinball.gif) | |
+| ![PINBALL](art/pinball.gif) | ![TINY GOLF](art/tiny_golf.gif) |
 
 ## The games
 
@@ -22,6 +22,9 @@ MicroPython. The only control is the board's BOOT button; nothing else is wired 
 - **PINBALL**: a table three screens tall that scrolls with the ball. Hold to wind up the
   launch; after that the button works both flippers. Knock down a bank of drop targets to wake
   the wisp on that side, wake both to light the moon, hit the moon for the jackpot.
+- **TINY GOLF**: nine holes seen from the side. The aim arrow sweeps by itself: press to lock
+  it, keep holding to wind up, let go to hit. Mushrooms bounce the ball, brambles stop it dead,
+  water costs a stroke, and the wolf sits in front of the last flag. Fewest strokes wins.
 
 On a menu screen (the game list, or a game's title and game-over screens) a tap is that
 screen's action and holding the button for three quarters of a second is the other one: play
@@ -65,8 +68,9 @@ uvx mpremote connect /dev/cu.usbmodemXXXX reset
   that tells the game, for every pixel, whether the ball is blocked there and which way the
   surface faces.
 - `tools/sim.py` plays the games with a bot on the button. `fair` checks that a bot playing
-  perfectly is never hit, `frames` dumps the screen, and `tools/frames.py` turns a dump into a
-  PNG sheet or a GIF. That is how the games were checked without watching the panel.
+  perfectly is never hit, `stats` plays whole games of pinball or a round of golf, `frames`
+  dumps the screen, and `tools/frames.py` turns a dump into a PNG sheet or a GIF. That is how
+  the games were checked without watching the panel.
 
 ```bash
 micropython tools/sim.py fair duel
